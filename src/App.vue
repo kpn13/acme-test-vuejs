@@ -1,92 +1,157 @@
-<script setup>
-import HelloWorld from "./components/HelloWorld.vue";
+<script>
+export default {
+  data() {
+    return {
+      list1: [],
+      list2: [],
+      selectedItem: null
+    };
+  },
+  methods: {
+    selectItem(item) {
+      if (this.selectedItem === item) {
+        this.selectedItem = null;
+      } else {
+        this.selectedItem = item;
+      }
+    },
+    addItem(list) {
+      list.push({ color: '', text: '' });
+      this.validateLists();
+    },
+    deleteItem(item) {
+      if (this.selectedItem === item) {
+        this.selectedItem = null;
+      }
+      const index1 = this.list1.indexOf(item);
+      if (index1 !== -1) {
+        this.list1.splice(index1, 1);
+      }
+      const index2 = this.list2.indexOf(item);
+      if (index2 !== -1) {
+        this.list2.splice(index2, 1);
+      }
+      this.validateLists();
+    },
+    moveItem(list1, list2) {
+      const item = this.selectedItem;
+      const index1 = list1.indexOf(item);
+      if (index1 !== -1) {
+        list1.splice(index1, 1);
+        list2.push(item);
+      } else {
+        const index2 = list2.indexOf(item);
+        if (index2 !== -1) {
+          list2.splice(index2, 1);
+          list1.push(item);
+        }
+      }
+      this.selectedItem = null;
+      this.validateLists();
+    },
+    copyItem(item) {
+      const newItem = { color: item.color, text: item.text };
+      this.list1.push(newItem);
+      this.validateLists();
+    },
+    validateLists() {
+      if (this.list1.length > 6) {
+        this.list1 = this.list1.slice(0, 6);
+      }
+      if (this.list2.length > 6) {
+        this.list2 = this.list2.slice(0, 6);
+      }
+    }
+  },
+  watch: {
+    selectedItem(newValue, oldValue) {
+      if (oldValue && oldValue !== newValue) {
+        oldValue.selected = false;
+      }
+      if (newValue) {
+        newValue.selected = true;
+      }
+    }
+  }
+};
 </script>
 
 <template>
-  <div id="app">
-    <header>
-      <img
-        alt="Vue logo"
-        class="logo"
-        src="@/assets/logo.svg"
-        width="125"
-        height="125"
-      />
-
-      <div class="wrapper">
-        <HelloWorld msg="You did it!" />
-
-        <nav>
-          <router-link to="/">Home</router-link>
-          <router-link to="/about">About</router-link>
-        </nav>
+  <div class="container">
+    <div class="list">
+      <div class="header">List 1</div>
+      <div class="item"
+           v-for="(item, index) in list1"
+           :key="index"
+           :class="{ selected: selectedItem === item }"
+           :style="{ backgroundColor: item.color }"
+           @click="selectItem(item)">
+        <input type="text" v-model="item.color">
+        <button @click="deleteItem(item)">x</button>
       </div>
-    </header>
-
-    <router-view />
+      <button @click="addItem(list1)" :disabled="list1.length >= 6">+</button>
+    </div>
+    <div class="list">
+      <div class="header">List 2</div>
+      <div class="item"
+           v-for="(item, index) in list2"
+           :key="index"
+           :class="{ selected: selectedItem === item }"
+           :style="{ backgroundColor: item.color }"
+           @click="selectItem(item)">
+        <input type="text" v-model="item.color">
+        <button @click="deleteItem(item)">x</button>
+      </div>
+      <button @click="addItem(list2)" :disabled="list2.length >= 6">+</button>
+    </div>
+    <div class="controls">
+      <button @click="moveItem(list1, list2)" :disabled="!selectedItem || list2.length >= 6">Move</button>
+      <button @click="deleteItem(selectedItem)" :disabled="!selectedItem">Delete</button>
+      <button @click="copyItem(selectedItem)" :disabled="!selectedItem || list1.length + list2.length >= 12">Copy</button>
+    </div>
   </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
+<style>
+.container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
   width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
+.list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
+.item {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  height: 200px;
+  margin: 5px;
+  border: 1px solid black;
 }
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
+.selected {
+  border: 2px solid green;
 }
 
-nav a:first-of-type {
-  border: 0;
+.controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px;
 }
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+button {
+  margin: 5px;
 }
 </style>
